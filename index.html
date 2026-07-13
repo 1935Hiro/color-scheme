@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>配色スタジオ — カラーパレット提案ツール</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>🎨 配色スタジオ</h1>
+    <nav class="main-tabs" id="main-tabs">
+      <button class="main-tab active" data-tab="generator">配色ジェネレーター</button>
+      <button class="main-tab" data-tab="metallic">メタリックグラデーション集</button>
+      <button class="main-tab" data-tab="a11y">アクセシビリティ</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===== 配色ジェネレーター ===== -->
+    <section id="tab-generator">
+      <div class="controls">
+        <div class="controls-top">
+          <button id="back-btn" hidden>◀ 前に戻る</button>
+        </div>
+
+        <div class="base-color-row">
+          <div class="base-preview" id="base-preview"></div>
+          <div class="base-inputs">
+            <label class="hex-label">基準色
+              <input type="text" id="hex-input" value="#3B82F6" maxlength="7" spellcheck="false" autocomplete="off">
+            </label>
+            <input type="color" id="color-picker" value="#3b82f6" title="カラーピッカー">
+          </div>
+
+          <div class="sliders">
+            <div class="slider-row">
+              <span class="slider-label">色相</span>
+              <input type="range" id="slider-h" min="0" max="360" step="1">
+              <span class="slider-value" id="value-h">0°</span>
+            </div>
+            <div class="slider-row">
+              <span class="slider-label">彩度</span>
+              <input type="range" id="slider-s" min="0" max="100" step="1">
+              <span class="slider-value" id="value-s">0%</span>
+            </div>
+            <div class="slider-row">
+              <span class="slider-label">明度</span>
+              <input type="range" id="slider-l" min="0" max="100" step="1">
+              <span class="slider-value" id="value-l">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="taste-tabs" id="taste-tabs"></div>
+      </div>
+
+      <div class="palettes" id="palettes"></div>
+    </section>
+
+    <!-- ===== アクセシビリティ ===== -->
+    <section id="tab-a11y" hidden>
+      <div class="a11y-card">
+        <h2>コントラストチェッカー</h2>
+        <p class="a11y-desc">文字色と背景色の組み合わせが WCAG 2.1 のコントラスト基準を満たすかチェックできます。</p>
+
+        <div class="contrast-inputs">
+          <div class="contrast-input-group">
+            <span class="contrast-input-label">文字色</span>
+            <input type="color" id="fg-picker" value="#ffffff">
+            <input type="text" id="fg-hex" class="hex-mini" value="#FFFFFF" maxlength="7" spellcheck="false" autocomplete="off">
+          </div>
+          <button id="swap-contrast" class="a11y-btn" title="文字色と背景色を入れ替え">⇄ 入れ替え</button>
+          <div class="contrast-input-group">
+            <span class="contrast-input-label">背景色</span>
+            <input type="color" id="bg-picker" value="#3b82f6">
+            <input type="text" id="bg-hex" class="hex-mini" value="#3B82F6" maxlength="7" spellcheck="false" autocomplete="off">
+          </div>
+          <button id="use-base-bg" class="a11y-btn">基準色を背景にする</button>
+        </div>
+
+        <div class="contrast-result">
+          <div class="contrast-preview" id="contrast-preview">
+            <span class="preview-large">見出しテキスト Aa</span>
+            <span class="preview-small">本文テキストのサンプルです。 The quick brown fox jumps over the lazy dog.</span>
+          </div>
+          <div class="contrast-score">
+            <div class="ratio-label">コントラスト比</div>
+            <div class="ratio-value" id="contrast-ratio">–</div>
+            <div class="wcag-badges" id="wcag-badges"></div>
+          </div>
+        </div>
+
+        <table class="wcag-table">
+          <thead>
+            <tr><th>対象</th><th>AA（最低基準）</th><th>AAA（推奨基準）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>通常テキスト</td><td>4.5 : 1 以上</td><td>7 : 1 以上</td></tr>
+            <tr><td>大きなテキスト（18pt以上 / 太字14pt以上）</td><td>3 : 1 以上</td><td>4.5 : 1 以上</td></tr>
+            <tr><td>UIコンポーネント・図形（WCAG 1.4.11）</td><td>3 : 1 以上</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="a11y-card">
+        <h2>基準色と白・黒テキストの組み合わせ</h2>
+        <div class="base-contrast-row" id="base-contrast"></div>
+      </div>
+
+      <div class="a11y-card">
+        <h2>色覚多様性シミュレーション</h2>
+        <p class="a11y-desc">配色ジェネレーターで現在生成されている配色パターンが、各色覚タイプでどのように見えるかの近似表示です。色だけに頼らない情報伝達（ラベル・形状の併用）の確認にご利用ください。</p>
+        <div id="cvd-sim"></div>
+      </div>
+    </section>
+
+    <!-- ===== メタリックグラデーション集 ===== -->
+    <section id="tab-metallic" hidden>
+      <p class="metallic-note">金属質感を再現した CSS グラデーションの一覧です。各カードの「CSSコピー」でそのまま利用できます。</p>
+      <div class="metallic-gallery" id="metallic-gallery"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
