@@ -149,155 +149,49 @@ function simulateCvd(hex, matrix) {
 }
 
 /* ================================================================
- * カラーイメージテイスト定義
- * s / l はそのテイストのトーンレンジ（生成色をこの範囲に収める）
- * huePull はベース以外の色相を特定方向へ寄せる補正
- * ================================================================ */
-
-const TASTES = [
-  { id: 'vivid',    label: 'ビビッド／ポップ',   s: [70, 100], l: [45, 60] },
-  { id: 'cute',     label: 'かわいい／パステル', s: [35, 65],  l: [74, 90] },
-  { id: 'natural',  label: 'ナチュラル',         s: [25, 55],  l: [45, 70], huePull: { target: 80,  amount: 0.25 } },
-  { id: 'elegant',  label: 'エレガント',         s: [14, 40],  l: [40, 66], huePull: { target: 300, amount: 0.18 } },
-  { id: 'modern',   label: 'モダン／クール',     s: [8, 35],   l: [24, 55], huePull: { target: 215, amount: 0.22 } },
-  { id: 'retro',    label: 'レトロ',             s: [35, 60],  l: [34, 56] },
-  { id: 'japanese', label: '和風／シック',       s: [15, 45],  l: [24, 46] },
-  { id: 'clear',    label: 'クリア／爽やか',     s: [40, 72],  l: [64, 86], huePull: { target: 200, amount: 0.22 } },
-  { id: 'romantic', label: 'ロマンティック',     s: [25, 55],  l: [70, 88], huePull: { target: 340, amount: 0.25 } },
-  { id: 'feminine', label: 'フェミニン',         s: [30, 60],  l: [58, 80], huePull: { target: 320, amount: 0.20 } },
-  { id: 'gorgeous', label: 'ゴージャス／豪華',   s: [45, 80],  l: [30, 52], huePull: { target: 40,  amount: 0.15 } },
-  { id: 'mysterious', label: 'ミステリアス',     s: [25, 55],  l: [18, 40], huePull: { target: 270, amount: 0.25 } },
-  { id: 'tropical', label: 'トロピカル',         s: [65, 95],  l: [50, 68], huePull: { target: 150, amount: 0.15 } },
-  { id: 'casual',   label: 'カジュアル',         s: [55, 85],  l: [52, 70] },
-  { id: 'urban',    label: 'アーバン／無機質',   s: [3, 18],   l: [35, 65] },
-  { id: 'earth',    label: 'アース／オータム',   s: [30, 60],  l: [35, 58], huePull: { target: 30,  amount: 0.30 } },
-  { id: 'minimal',  label: 'ミニマル／モノトーン', s: [0, 10], l: [22, 82] },
-  { id: 'smoky',    label: 'スモーキー／ニュアンス', s: [8, 26], l: [45, 72] },
-  { id: 'nordic',   label: '北欧／ノルディック', s: [15, 45],  l: [62, 86], huePull: { target: 210, amount: 0.15 } },
-  { id: 'vintage',  label: 'ヴィンテージ／セピア', s: [15, 40], l: [40, 65], huePull: { target: 35, amount: 0.35 } },
-  { id: 'classic',  label: 'クラシック／トラッド', s: [25, 52], l: [24, 46], huePull: { target: 355, amount: 0.15 } },
-  { id: 'dandy',    label: 'ダンディ／マスキュリン', s: [10, 35], l: [20, 42], huePull: { target: 220, amount: 0.20 } },
-  { id: 'midnight', label: 'ラグジュアリー／ミッドナイト', s: [30, 60], l: [12, 32], huePull: { target: 240, amount: 0.20 } },
-  { id: 'cyber',    label: 'サイバー／ネオン',   s: [75, 100], l: [50, 66], huePull: { target: 285, amount: 0.20 } },
-  { id: 'sweet',    label: 'スイート／キャンディ', s: [50, 80], l: [68, 86], huePull: { target: 330, amount: 0.20 } },
-  { id: 'fresh',    label: 'フレッシュ／シトラス', s: [60, 90], l: [55, 75], huePull: { target: 75,  amount: 0.25 } },
-  { id: 'marine',   label: 'マリン／オーシャン', s: [45, 80],  l: [45, 70], huePull: { target: 210, amount: 0.35 } },
-  { id: 'forest',   label: 'フォレスト／ボタニカル', s: [30, 60], l: [30, 55], huePull: { target: 130, amount: 0.35 } },
-  { id: 'sunset',   label: 'サンセット／ウォーム', s: [55, 85], l: [50, 68], huePull: { target: 25,  amount: 0.30 } },
-  { id: 'ethnic',   label: 'エスニック／スパイス', s: [50, 80], l: [38, 58], huePull: { target: 15,  amount: 0.20 } },
-];
-
-/* ================================================================
  * 配色パターン生成
  *
- * 各エントリ:
- *   dh    — 基準色からの色相オフセット（度）
- *   ds/dl — テイストレンジ内の相対位置(0-1)への加算オフセット
- *   base  — true なら基準色そのものを使用
+ * テイスト定義とレシピは tastes.js（TASTES）にある。
+ * 各テイストが持つ 6 つのレシピから、基準色を織り込んだ
+ * 6 パターン（各 6 色）を生成する。
  * ================================================================ */
-
-const SCHEMES = [
-  {
-    name: '同系色（モノクロマティック）',
-    entries: [
-      { dh: 0, ds: -0.10, dl: 0.38 },
-      { dh: 0, ds: -0.20, dl: 0.20 },
-      { dh: 0, base: true },
-      { dh: 0, ds: 0.12,  dl: -0.16 },
-      { dh: 0, ds: -0.25, dl: -0.30 },
-      { dh: 0, ds: 0.18,  dl: -0.44 },
-    ],
-  },
-  {
-    name: '類似色（アナロガス）',
-    entries: [
-      { dh: -30, dl: 0.12 },
-      { dh: -15, dl: -0.10 },
-      { dh: 0, base: true },
-      { dh: 15, dl: 0.18 },
-      { dh: 30, dl: -0.14 },
-      { dh: 45, dl: 0.05 },
-    ],
-  },
-  {
-    name: '補色（コンプリメンタリー）',
-    entries: [
-      { dh: 0, base: true },
-      { dh: 0,   dl: 0.24 },
-      { dh: 0,   dl: -0.22, ds: -0.15 },
-      { dh: 180, dl: 0.16 },
-      { dh: 180 },
-      { dh: 180, dl: -0.24 },
-    ],
-  },
-  {
-    name: '分裂補色（スプリット）',
-    entries: [
-      { dh: 0, base: true },
-      { dh: 0,    dl: 0.22 },
-      { dh: 150 },
-      { dh: 150,  dl: 0.20 },
-      { dh: -150 },
-      { dh: -150, dl: -0.18 },
-    ],
-  },
-  {
-    name: 'トライアド',
-    entries: [
-      { dh: 0, base: true },
-      { dh: 0,   dl: 0.24 },
-      { dh: 120 },
-      { dh: 120, dl: -0.16 },
-      { dh: 240 },
-      { dh: 240, dl: 0.20 },
-    ],
-  },
-  {
-    name: 'トーングラデーション',
-    monotone: true, // 明度を単調変化させグラデーション向きに並べる
-    entries: [
-      { dh: 0, lPos: 1.0 },
-      { dh: 0, lPos: 0.8 },
-      { dh: 0, lPos: 0.6 },
-      { dh: 0, lPos: 0.4 },
-      { dh: 0, lPos: 0.2 },
-      { dh: 0, lPos: 0.0 },
-    ],
-  },
-];
 
 // 基準色とテイストから6パターン（各6色）を生成する
 function generatePalettes(base, taste) {
   const baseHex = hslToHex(base.h, base.s, base.l);
-  // 基準色の彩度・明度をテイストレンジ内の相対位置(0-1)として扱う
-  const sPosBase = base.s / 100;
-  const lPosBase = base.l / 100;
+  // 基準色の S/L の中央(50%)からの偏差をレシピ位置へ緩やかに反映する
+  const sShift = (base.s / 100 - 0.5) * 0.25;
+  const lShift = (base.l / 100 - 0.5) * 0.25;
 
-  return SCHEMES.map((scheme) => {
-    const colors = scheme.entries.map((e) => {
-      if (e.base) return baseHex;
+  return taste.recipes.map((recipe) => {
+    const colors = recipe.colors.map((spec) => {
+      if (spec.b) return baseHex;
 
-      let h = mod(base.h + (e.dh || 0), 360);
-      if (taste.huePull && e.dh !== 0) {
-        h = pullHue(h, taste.huePull.target, taste.huePull.amount);
+      // 色相: hue はテイスト固有アンカー（基準色相へ blend 分引き寄せ）、
+      //       dh は基準色相からの相対オフセット
+      let h;
+      if (spec.n) {
+        h = spec.hue != null ? spec.hue : base.h;
+      } else if (spec.hue != null) {
+        h = pullHue(spec.hue, base.h, spec.blend != null ? spec.blend : 0.25);
+      } else {
+        h = mod(base.h + (spec.dh || 0), 360);
       }
 
-      let sPos, lPos;
-      if (scheme.monotone) {
-        sPos = clamp(sPosBase, 0.15, 1);
-        // グラデーション用はテイストレンジを少し拡張して明暗差を出す
-        const lMin = clamp(taste.l[0] - 14, 6, 94);
-        const lMax = clamp(taste.l[1] + 14, 6, 94);
-        return hslToHex(h, lerp(taste.s[0], taste.s[1], sPos), lerp(lMin, lMax, e.lPos));
+      // ニュートラル: 彩度を低く固定し、明度は絶対レンジへマップ
+      if (spec.n) {
+        const l = clamp(lerp(12, 94, spec.l + lShift), 4, 97);
+        return hslToHex(h, 6, l);
       }
 
-      sPos = clamp(sPosBase + (e.ds || 0), 0, 1);
-      lPos = clamp(lPosBase + (e.dl || 0), 0, 1);
-      const s = lerp(taste.s[0], taste.s[1], sPos);
-      const l = lerp(taste.l[0], taste.l[1], lPos);
+      const sPos = clamp((spec.s != null ? spec.s : 0.5) + sShift, 0, 1);
+      const s = spec.sAbs != null ? spec.sAbs : lerp(taste.s[0], taste.s[1], sPos);
+      // l 位置は範囲外(グラデーション用)も許容し、最終値でクランプする
+      const lPos = (spec.l != null ? spec.l : 0.5) + lShift;
+      const l = clamp(lerp(taste.l[0], taste.l[1], lPos), 6, 94);
       return hslToHex(h, s, l);
     });
-    return { name: scheme.name, colors };
+    return { name: recipe.name, colors };
   });
 }
 
