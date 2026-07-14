@@ -56,7 +56,7 @@ function assert(cond, message) {
 /* ---------- データ構造 ---------- */
 
 assert(Array.isArray(TASTES), 'TASTES が配列であること');
-assert(TASTES.length === 40, `テイストが40種類あること（実際: ${TASTES.length}）`);
+assert(TASTES.length === 60, `テイストが60種類あること（実際: ${TASTES.length}）`);
 
 const ids = new Set();
 for (const t of TASTES) {
